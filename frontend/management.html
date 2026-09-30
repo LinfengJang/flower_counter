@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#faf8f2"><title>数据管理 · 小红花</title><script src="/theme.js"></script>
+  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/management.css"></head>
+<body><div class="page-shell">
+  <header class="topbar"><a class="brand" href="/" aria-label="小红花首页"><span class="brand-flower">✿</span><span>小红花 <span class="brand-muted">数据管理</span></span></a><nav class="topbar-right page-nav"><a href="/">首页</a><a class="active" href="/management">数据管理</a><a href="/settings">设置</a><button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">深色模式</span></button></nav></header>
+  <main class="subpage-main">
+    <section class="subpage-intro"><p class="eyebrow"><span>✳</span> 先建好统计，再开始登记</p><h1>数据管理<span class="title-dot">.</span></h1><p class="subtitle">每条统计对应一个班级和月份，可继续录入、修改信息或删除。</p></section>
+    <section class="panel create-session-panel"><div class="section-kicker">01 <span>·</span> 新建统计</div><h2>创建一次小红花统计</h2><form id="create-session-form" class="create-session-form"><label>选择班级<select id="create-class" required></select></label><label>统计月份<input id="create-month" type="month" required></label><button class="primary-button" id="create-session-button" type="submit">创建统计 <span>→</span></button></form><p class="form-note" id="class-note">请先在设置页面添加班级并导入学生名单。</p><div class="inline-message hidden" id="create-message" role="status"></div></section>
+    <section class="sessions-section"><div class="sessions-heading"><div><div class="section-kicker">02 <span>·</span> 已创建</div><h2>统计记录</h2></div><span class="record-count" id="record-count">0 条</span></div><div class="session-list" id="session-list"></div><div class="sessions-empty hidden" id="sessions-empty"><span>✿</span><strong>还没有统计记录</strong><p>选择班级和月份，创建第一条统计。</p></div></section>
+  </main>
+</div>
+<dialog class="edit-dialog" id="edit-dialog"><form id="edit-session-form"><div class="section-kicker">编辑统计信息</div><h2>修改班级或月份</h2><label>班级<select id="edit-class" required></select></label><label>统计月份<input id="edit-month" type="month" required></label><div class="dialog-error" id="edit-error"></div><div class="dialog-actions"><button class="secondary-button" id="cancel-edit" type="button">取消</button><button class="primary-button" type="submit">保存更改</button></div></form></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div><script src="/management.js" defer></script></body></html>

@@ -4,94 +4,39 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#faf8f2">
-  <title>小红花 · 班级月榜</title>
+  <title>小红花 · 数据总览</title>
+  <script src="/theme.js"></script>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <div class="page-shell">
     <header class="topbar">
-      <a class="brand" href="/" aria-label="小红花统计器首页">
-        <span class="brand-flower">✿</span>
-        <span>小红花 <span class="brand-muted">班级统计</span></span>
-      </a>
-      <div class="topbar-right"><a class="quick-entry-link" href="/entry">单人快速录入 <span>↗</span></a><span class="local-dot"></span><span>数据保存在本机</span></div>
+      <a class="brand" href="/" aria-label="小红花首页"><span class="brand-flower">✿</span><span>小红花</span></a>
+      <nav class="topbar-right page-nav"><a class="active" href="/">首页</a><a href="/management">数据管理</a><a href="/settings">设置</a><button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">深色模式</span></button></nav>
     </header>
-
     <main>
-      <section class="intro">
-        <div>
-          <p class="eyebrow"><span>✳</span> 每一朵努力，都值得被看见</p>
-          <h1>本月小红花<span class="title-dot">.</span></h1>
-          <p class="subtitle">把孩子们数好的小红花记下来，月榜自动排好。</p>
-        </div>
-        <div class="month-picker-wrap">
-          <label for="month-picker">统计月份</label>
-          <div class="month-picker"><span class="calendar-icon">▦</span><input id="month-picker" type="month"></div>
-        </div>
+      <section class="intro overview-intro">
+        <div class="overview-title-group"><div class="overview-filters" aria-label="筛选统计范围"><span class="filter-label">统计范围</span><label><span class="visually-hidden">选择班级</span><select id="filter-class"><option value="">所有班级</option></select></label><label><span class="visually-hidden">选择月份</span><select id="filter-month"><option value="">所有月份</option></select></label></div><h1>数据总览<span class="title-dot">.</span></h1><p class="subtitle" id="overview-subtitle">跨班级、跨月份查看已登记的小红花数据。</p></div>
+        <a class="overview-create-link" href="/management">创建统计 <span>→</span></a>
       </section>
-
-      <section class="stats-grid" aria-label="本月统计概况">
-        <article class="stat-card stat-highlight">
-          <div class="stat-label">全班小红花 <span class="stat-icon flower-icon">✿</span></div>
-          <div class="stat-number" id="total-count">—</div>
-          <div class="stat-foot">朵 <span class="stat-separator">·</span> 本月累计</div>
-        </article>
-        <article class="stat-card">
-          <div class="stat-label">已完成录入 <span class="stat-icon">✓</span></div>
-          <div class="stat-number"><span id="entered-count">—</span><small> / <span id="class-size">—</span></small></div>
-          <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
-          <div class="stat-foot" id="progress-label">位同学</div>
-        </article>
-        <article class="stat-card leader-card">
-          <div class="stat-label">本月小花王 <span class="stat-icon crown-icon">♕</span></div>
-          <div class="stat-number leader-name" id="leader-name">—</div>
-          <div class="stat-foot"><span id="leader-count">—</span> 朵 <span class="stat-separator">·</span> 继续加油</div>
-        </article>
+      <section class="stats-grid overview-stats" aria-label="所有班级统计概况">
+        <article class="stat-card"><div class="stat-label">班级数量 <span class="stat-icon">▦</span></div><div class="stat-number" id="class-count">0</div><div class="stat-foot">个班级</div></article>
+        <article class="stat-card"><div class="stat-label">统计记录 <span class="stat-icon">▤</span></div><div class="stat-number" id="session-count">0</div><div class="stat-foot">个班级月份</div></article>
+        <article class="stat-card stat-highlight"><div class="stat-label">累计已登记 <span class="stat-icon flower-icon">✿</span></div><div class="stat-number" id="total-count">0</div><div class="stat-foot">朵 <span class="stat-separator">·</span> 汇总所有统计</div></article>
+        <article class="stat-card"><div class="stat-label">登记进度 <span class="stat-icon">✓</span></div><div class="stat-number"><span id="entered-count">0</span><small> / <span id="expected-count">0</span></small></div><div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div><div class="stat-foot">已登记学生人次</div></article>
       </section>
-
-      <div class="workspace-grid">
-        <section class="panel entry-panel">
-          <div class="panel-heading">
-            <div><div class="section-kicker">01 <span>·</span> 月度登记</div><h2>录入花朵数量</h2></div>
-            <button class="text-button" id="paste-toggle" type="button"><span>▤</span> 粘贴一列数量</button>
-          </div>
-          <div class="paste-box hidden" id="paste-box">
-            <div class="paste-copy"><strong>从表格复制数量</strong><span>按名单顺序，每行一个数字；空行按 0 处理。</span></div>
-            <textarea id="paste-input" rows="3" placeholder="例如：&#10;12&#10;8&#10;15"></textarea>
-            <button class="small-primary" id="apply-paste" type="button">填入名单</button>
-          </div>
-          <div class="entry-tools">
-            <div class="search-box"><span>⌕</span><input id="search-input" type="search" placeholder="查找学生" autocomplete="off"></div>
-            <span class="keyboard-hint">输入数字后按 <kbd>↑</kbd> <kbd>↓</kbd> 切换</span>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th class="order-col">#</th><th>学生姓名</th><th class="count-heading">小红花 <span>(朵)</span></th><th class="state-col">状态</th></tr></thead>
-              <tbody id="student-rows"></tbody>
-            </table>
-            <div class="empty-state hidden" id="empty-state">没有找到这位同学</div>
-          </div>
-          <div class="entry-footer">
-            <span class="save-state" id="save-state"><i></i><span>所有修改已保存</span></span>
-            <button class="save-button" id="save-button" type="button" disabled><span>✓</span> 保存本次统计</button>
-          </div>
+      <section class="no-session-notice hidden" id="no-records-notice"><span class="notice-flower">✿</span><div><strong>还没有统计记录</strong><p id="no-records-copy">先到设置中准备班级名单，再创建班级和月份统计。</p></div><a href="/settings">前往设置 <span>→</span></a></section>
+      <div class="overview-grid">
+        <section class="overview-charts">
+          <article class="panel overview-chart-panel"><div class="panel-heading"><div><div class="section-kicker">01 <span>·</span> 汇总趋势</div><h2>每月已登记小红花</h2></div><span class="chart-mark trend-mark">⌁</span></div><p class="overview-chart-caption">汇总所有班级当月的统计记录</p><div class="overview-svg-wrap"><svg id="overview-trend-chart" viewBox="0 0 760 270" role="img" aria-label="所有班级每月小红花汇总趋势"></svg></div><div class="overview-chart-empty hidden" id="overview-trend-empty">创建并录入统计后，这里会显示跨月趋势。</div></article>
+          <article class="panel overview-chart-panel class-chart-panel"><div class="panel-heading"><div><div class="section-kicker">02 <span>·</span> 班级对比</div><h2>各班累计登记数量</h2></div><span class="chart-mark distribution-mark">▥</span></div><p class="overview-chart-caption">汇总该班级所有月份中已登记的数量</p><div class="overview-svg-wrap"><svg id="class-chart" viewBox="0 0 760 300" role="img" aria-label="各班累计小红花数量对比"></svg></div><div class="overview-chart-empty hidden" id="class-chart-empty">添加班级并录入统计后，这里会显示班级对比。</div></article>
         </section>
-
-        <section class="panel ranking-panel">
-          <div class="panel-heading ranking-heading">
-            <div><div class="section-kicker">02 <span>·</span> 荣誉时刻</div><h2>本月小花榜</h2></div>
-            <span class="top-ten-pill">TOP 10</span>
-          </div>
-          <p class="ranking-caption">每一份认真，都闪闪发光</p>
-          <div class="ranking-list" id="ranking-list"></div>
-          <div class="ranking-empty hidden" id="ranking-empty"><span>✿</span><strong>榜单正在等待第一朵花</strong><small>录入并保存数量后，这里就会亮起来。</small></div>
-          <a class="export-link" id="export-link" href="#"><span>↓</span> 导出本月统计表 <span class="export-arrow">↗</span></a>
-        </section>
+        <section class="panel recent-panel"><div class="panel-heading"><div><div class="section-kicker">03 <span>·</span> 最近记录</div><h2>统计记录</h2></div><a class="all-records-link" href="/management">全部 <span>→</span></a></div><div class="recent-session-list" id="recent-session-list"></div><div class="recent-empty hidden" id="recent-empty">还没有创建统计记录。</div></section>
       </div>
-      <footer class="page-footer"><span>✿</span> 小小红花，大大鼓励 <span class="footer-dot">·</span> 班级专属月榜</footer>
+      <footer class="page-footer"><span>✿</span> 小小红花，大大鼓励 <span class="footer-dot">·</span> 班级专属统计</footer>
     </main>
   </div>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/charts.js" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>

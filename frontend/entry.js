@@ -1,15 +1,12 @@
 const $ = (selector) => document.querySelector(selector);
-const monthInput = $('#entry-month');
 const numberInput = $('#student-number');
 const countInput = $('#flower-count');
+const sessionId = new URLSearchParams(location.search).get('session') || localStorage.getItem('flowerCounterSessionId');
 let roster = [];
+let session = null;
 let selectedStudent = null;
 let toastTimer;
 
-function currentMonth() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-}
 function showToast(message) {
   const toast = $('#toast');
   toast.textContent = message;
@@ -21,14 +18,25 @@ async function loadRoster() {
   selectedStudent = null;
   $('#student-confirmation').classList.add('hidden');
   $('#lookup-error').classList.add('hidden');
+  if (!sessionId) {
+    $('#lookup-error').innerHTML = '请先到<a href="/management">数据管理</a>创建一条统计记录。';
+    $('#lookup-error').classList.remove('hidden');
+    $('#lookup-button').disabled = true;
+    return;
+  }
   try {
-    const response = await fetch(`/api/month?month=${monthInput.value}`);
+    const response = await fetch(`/api/session/${sessionId}`);
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || '名单读取失败');
+    session = data;
     roster = data.students;
+    localStorage.setItem('flowerCounterSessionId', String(session.id));
+    $('#entry-session-label').textContent = `${session.class_name} · ${session.month}`;
+    $('#entry-session-label').href = `/?session=${session.id}`;
   } catch (error) {
     $('#lookup-error').textContent = error.message;
     $('#lookup-error').classList.remove('hidden');
+    $('#lookup-button').disabled = true;
   }
 }
 function lookupStudent() {
@@ -37,7 +45,7 @@ function lookupStudent() {
   const error = $('#lookup-error');
   if (!selectedStudent) {
     $('#student-confirmation').classList.add('hidden');
-    error.textContent = numberInput.value ? '没有找到这个学号，请按名单序号检查。' : '请先输入学号。';
+    error.textContent = numberInput.value ? '没有找到这个序号，请按名单检查。' : '请先输入学生序号。';
     error.classList.remove('hidden');
     numberInput.focus();
     numberInput.select();
@@ -45,11 +53,14 @@ function lookupStudent() {
   }
   error.classList.add('hidden');
   $('#student-name').textContent = selectedStudent.name;
-  $('#identity-number').textContent = `学号 ${selectedStudent.number}`;
-  $('#existing-count').textContent = selectedStudent.saved ? `本月当前记录：${selectedStudent.count} 朵，保存后将更新为新数量。` : '这位同学本月还没有登记过。';
+  $('#identity-number').textContent = `序号 ${selectedStudent.number}`;
+  $('#existing-count').textContent = selectedStudent.saved ? `本次统计当前记录：${selectedStudent.count} 朵，保存后将更新为新数量。` : '这位同学本次统计还没有登记过。';
   countInput.value = selectedStudent.saved ? selectedStudent.count : '';
   $('#student-confirmation').classList.remove('hidden');
-  countInput.focus();
+  requestAnimationFrame(() => {
+    countInput.focus({preventScroll: true});
+    countInput.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center'});
+  });
 }
 async function saveCount() {
   if (!selectedStudent) return;
@@ -63,7 +74,7 @@ async function saveCount() {
   button.disabled = true;
   button.innerHTML = '<span>…</span> 正在保存';
   try {
-    const response = await fetch(`/api/month/${monthInput.value}/student/${selectedStudent.id}/count`, {
+    const response = await fetch(`/api/session/${session.id}/student/${selectedStudent.id}/count`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({count: Number(raw)})
@@ -86,8 +97,6 @@ async function saveCount() {
   }
 }
 
-monthInput.value = currentMonth();
-monthInput.addEventListener('change', loadRoster);
 $('#lookup-button').addEventListener('click', lookupStudent);
 numberInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') lookupStudent(); });
 countInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') saveCount(); });

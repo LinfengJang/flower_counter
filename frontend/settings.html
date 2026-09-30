@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#faf8f2"><title>设置 · 小红花</title><script src="/theme.js"></script>
+  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/management.css"></head>
+<body><div class="page-shell">
+  <header class="topbar"><a class="brand" href="/" aria-label="小红花首页"><span class="brand-flower">✿</span><span>小红花 <span class="brand-muted">设置</span></span></a><nav class="topbar-right page-nav"><a href="/">首页</a><a href="/management">数据管理</a><a class="active" href="/settings">设置</a><button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">深色模式</span></button></nav></header>
+  <main class="subpage-main">
+    <section class="subpage-intro"><p class="eyebrow"><span>✳</span> 先整理班级，再导入名单</p><h1>班级与学生<span class="title-dot">.</span></h1><p class="subtitle">每份学生名单都归属一个班级；创建统计时再选择班级和月份。</p></section>
+    <section class="panel settings-panel"><div class="section-kicker">01 <span>·</span> 班级</div><h2>添加班级</h2><form id="create-class-form" class="create-class-form"><label for="class-name">班级名称</label><div><input id="class-name" maxlength="40" placeholder="例如：一（2）班" required><button class="primary-button" type="submit">添加班级</button></div></form><div class="inline-message hidden" id="class-message" role="status"></div><div class="class-list" id="class-list"></div></section>
+    <section class="panel settings-panel import-panel"><div class="section-kicker">02 <span>·</span> 学生名单</div><h2>导入学生数据</h2><p class="settings-copy">先选择班级，再导入包含“姓名”列的 Excel 或 CSV 文件。支持“序号 / 学号、姓名、性别”列；序号和性别可选。</p><form id="import-form"><label for="import-class">归入班级</label><select id="import-class" required></select><label for="roster-file">学生名单文件</label><input id="roster-file" type="file" accept=".xlsx,.csv" required><div class="import-actions"><button class="primary-button" id="import-button" type="submit">导入名单 <span>↑</span></button><span class="form-note">支持 .xlsx、.csv，最大 12 MB</span></div></form><div class="inline-message hidden" id="import-message" role="status"></div></section>
+    <aside class="settings-hint"><span>ⓘ</span><p>导入名单会替换所选班级的当前名单。若该班级已经有已录入数据的统计，为保护历史记录，系统会阻止替换。</p></aside>
+  </main>
+</div><div class="toast" id="toast" role="status" aria-live="polite"></div><script src="/settings.js" defer></script></body></html>

@@ -1,176 +1,83 @@
 const $ = (selector) => document.querySelector(selector);
-const monthInput = $('#month-picker');
-const rowsEl = $('#student-rows');
-const saveButton = $('#save-button');
-const saveState = $('#save-state');
-let students = [];
-let month = '';
-let dirty = false;
-let monthStats = {};
-let toastTimer;
-
-function currentMonth() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-}
-function showToast(message) {
-  const toast = $('#toast');
-  toast.textContent = message;
-  toast.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
-}
-function setDirty(value) {
-  dirty = value;
-  saveButton.disabled = !value;
-  saveState.className = `save-state${value ? ' unsaved' : ''}`;
-  saveState.querySelector('span').textContent = value ? '有尚未保存的修改' : '所有修改已保存';
-}
-async function loadMonth(nextMonth) {
-  if (dirty && !window.confirm('当前修改还没有保存，切换月份会放弃这些修改。继续切换吗？')) {
-    monthInput.value = month;
-    return;
-  }
-  month = nextMonth;
-  monthInput.value = month;
-  $('#export-link').href = `/api/export.csv?month=${month}`;
-  rowsEl.innerHTML = '<tr><td colspan="4" class="loading-cell">正在打开本月名单…</td></tr>';
-  try {
-    const response = await fetch(`/api/month?month=${month}`);
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || '读取失败');
-    students = data.students;
-    render(data);
-    setDirty(false);
-  } catch (error) {
-    rowsEl.innerHTML = '<tr><td colspan="4" class="loading-cell">无法连接到统计服务，请刷新页面重试。</td></tr>';
-    showToast(error.message);
-  }
-}
-function render(data) {
-  monthStats = data;
-  const query = $('#search-input').value.trim().toLocaleLowerCase();
-  rowsEl.innerHTML = '';
-  let visibleCount = 0;
-  for (const [index, student] of students.entries()) {
-    if (query && !student.name.toLocaleLowerCase().includes(query)) continue;
-    visibleCount++;
-    const tr = document.createElement('tr');
-    tr.dataset.id = student.id;
-    tr.innerHTML = `<td class="student-order">${String(index + 1).padStart(2, '0')}</td>
-      <td class="student-name">${escapeHtml(student.name)}</td>
-      <td class="count-cell"><input class="count-input" type="number" min="0" max="9999" step="1" inputmode="numeric" aria-label="${escapeHtml(student.name)}的小红花数量" value="${student.count}" data-id="${student.id}"></td>
-      <td class="state-col"><span class="state-label ${student.saved ? 'done' : ''}">${student.saved ? '已登记' : '待登记'}</span></td>`;
-    rowsEl.appendChild(tr);
-  }
-  $('#empty-state').classList.toggle('hidden', visibleCount > 0);
-  for (const input of rowsEl.querySelectorAll('.count-input')) {
-    input.addEventListener('input', () => {
-      const value = input.value;
-      const student = students.find((s) => s.id === Number(input.dataset.id));
-      student.count = value === '' ? 0 : Math.max(0, Math.min(9999, Number.parseInt(value, 10) || 0));
-      student.saved = false;
-      input.classList.add('edited');
-      input.closest('tr').querySelector('.state-label').textContent = '待保存';
-      input.closest('tr').querySelector('.state-label').className = 'state-label';
-      setDirty(true);
-      updateSummary();
-      drawRanking();
-    });
-    input.addEventListener('change', () => {
-      if (input.value === '' || Number(input.value) < 0) input.value = '0';
-      if (Number(input.value) > 9999) input.value = '9999';
-    });
-    input.addEventListener('keydown', (event) => {
-      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp' && event.key !== 'Enter') return;
-      event.preventDefault();
-      const visible = [...rowsEl.querySelectorAll('.count-input')];
-      const step = event.key === 'ArrowUp' ? -1 : 1;
-      visible[Math.max(0, Math.min(visible.length - 1, visible.indexOf(input) + step))]?.focus();
-      if (event.key === 'Enter') input.blur();
-    });
-  }
-  updateSummary(data.ranking);
-  drawRanking(data.ranking);
-  $('#entered-count').textContent = data.entered;
-  $('#class-size').textContent = data.class_size;
-  $('#progress-fill').style.width = `${data.class_size ? data.entered / data.class_size * 100 : 0}%`;
-  $('#progress-label').textContent = data.entered === data.class_size ? '全班已完成' : `位同学已完成`;
-}
-function updateSummary() {
-  $('#total-count').textContent = students.reduce((sum, s) => sum + (Number(s.count) || 0), 0).toLocaleString('zh-CN');
-  const ordered = [...students].sort((a, b) => b.count - a.count || a.id - b.id);
-  const leader = ordered[0];
-  $('#leader-name').textContent = leader?.count ? leader.name : '等待第一朵花';
-  $('#leader-count').textContent = leader?.count ? leader.count : '0';
-}
-function drawRanking() {
-  const ranked = [...students].sort((a, b) => b.count - a.count || a.id - b.id).slice(0, 10);
-  const list = $('#ranking-list');
-  list.innerHTML = '';
-  const hasFlowers = ranked.some((s) => s.count > 0);
-  $('#ranking-empty').classList.toggle('hidden', hasFlowers);
-  list.classList.toggle('hidden', !hasFlowers);
-  if (!hasFlowers) return;
-  let lastCount = null;
-  let rank = 0;
-  ranked.forEach((student, index) => {
-    if (student.count !== lastCount) rank = index + 1;
-    lastCount = student.count;
-    const row = document.createElement('div');
-    row.className = 'rank-row';
-    row.innerHTML = `<span class="rank-medal">${rank}</span><span class="rank-name">${escapeHtml(student.name)}</span><span class="rank-count ${student.count ? '' : 'rank-zero'}">${student.count}<small>朵</small></span>`;
-    list.appendChild(row);
-  });
-}
+const fmt = window.FlowerCharts.formatNumber;
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 }
-async function saveAll() {
-  if (!dirty) return;
-  saveButton.disabled = true;
-  saveState.className = 'save-state saving';
-  saveState.querySelector('span').textContent = '正在保存…';
+function renderRecent(sessions) {
+  const list = $('#recent-session-list');
+  list.innerHTML = '';
+  sessions.forEach((item, index) => {
+    const row = document.createElement('article');
+    row.className = 'recent-session-row';
+    row.style.setProperty('--row-delay', `${Math.min(index, 10) * 28}ms`);
+    row.innerHTML = `<div class="recent-session-top"><strong>${escapeHtml(item.class_name)}</strong><span>${escapeHtml(item.month)}</span></div><div class="recent-session-meta">已登记 ${item.entered} / ${item.class_size} 人 <span>·</span> ${fmt(item.total)} 朵</div><div class="recent-session-actions"><a href="/report?session=${item.id}">查看报表 <span>→</span></a><a href="/entry?session=${item.id}">录入 / 修改</a></div>`;
+    list.appendChild(row);
+  });
+  $('#recent-empty').classList.toggle('hidden', sessions.length > 0);
+}
+function renderOverview(data) {
+  const classFilter = $('#filter-class').value;
+  const monthFilter = $('#filter-month').value;
+  const records = data.session_summaries.filter((item) => (!classFilter || String(item.class_id) === classFilter) && (!monthFilter || item.month === monthFilter));
+  const activeClasses = new Set(records.map((item) => String(item.class_id)));
+  const classes = data.classes.filter((item) => (!classFilter && !monthFilter) ? true : activeClasses.has(String(item.id)))
+    .map((item) => ({...item, total: records.filter((record) => record.class_id === item.id).reduce((sum, record) => sum + Number(record.total), 0)}));
+  const total = records.reduce((sum, item) => sum + Number(item.total), 0);
+  const entered = records.reduce((sum, item) => sum + Number(item.entered), 0);
+  const expected = records.reduce((sum, item) => sum + Number(item.class_size), 0);
+  const byMonth = new Map();
+  for (const item of records) {
+    const point = byMonth.get(item.month) || {month: item.month, total: 0, sessions: 0, entered: 0};
+    point.total += Number(item.total); point.sessions += 1; point.entered += Number(item.entered);
+    byMonth.set(item.month, point);
+  }
+  const trend = [...byMonth.values()].sort((a,b) => a.month.localeCompare(b.month));
+  $('#class-count').textContent = (!classFilter && !monthFilter) ? data.class_count : activeClasses.size;
+  $('#session-count').textContent = records.length;
+  $('#total-count').textContent = fmt(total);
+  $('#entered-count').textContent = entered.toLocaleString('zh-CN');
+  $('#expected-count').textContent = expected.toLocaleString('zh-CN');
+  $('#progress-fill').style.width = `${expected ? Math.min(100, entered / expected * 100) : 0}%`;
+  const selectedClass = data.classes.find((item) => String(item.id) === classFilter);
+  const scope = `${selectedClass ? selectedClass.name : '所有班级'} · ${monthFilter || '所有月份'}`;
+  $('.eyebrow').innerHTML = `<span>✳</span> ${escapeHtml(scope)}`;
+  $('#overview-subtitle').textContent = `${selectedClass ? selectedClass.name : '跨班级'}、${monthFilter || '跨月份'}查看已登记的小红花数据。`;
+  $('.overview-chart-panel:first-child .overview-chart-caption').textContent = monthFilter ? `${monthFilter} · ${selectedClass ? selectedClass.name : '各班'}登记汇总` : '汇总所选范围内每月的统计记录';
+  $('.class-chart-panel .overview-chart-caption').textContent = monthFilter ? `${monthFilter} · 各班登记数量对比` : '汇总所选班级所有月份的登记数量';
+  const trendVisible = window.FlowerCharts.drawTrend($('#overview-trend-chart'), trend);
+  $('#overview-trend-chart').classList.toggle('hidden', !trendVisible);
+  $('#overview-trend-empty').classList.toggle('hidden', trendVisible);
+  const classesWithStats = classes.filter((item) => item.total > 0);
+  const classVisible = window.FlowerCharts.drawClassBars($('#class-chart'), classesWithStats);
+  $('#class-chart').classList.toggle('hidden', !classVisible);
+  $('#class-chart-empty').classList.toggle('hidden', classVisible);
+  renderRecent(records.slice(0, 8));
+  $('#no-records-notice').classList.toggle('hidden', records.length > 0 || (!classFilter && !monthFilter && data.session_count === 0));
+  $('#no-records-notice strong').textContent = '当前范围没有统计记录';
+  $('#no-records-copy').textContent = (classFilter || monthFilter) ? '可以更换班级或月份筛选条件，查看其他统计记录。' : '先到设置中准备班级名单，再创建班级和月份统计。';
+}
+async function loadOverview() {
   try {
-    const response = await fetch(`/api/month/${month}/counts`, {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({counts: Object.fromEntries(students.map((s) => [s.id, Number(s.count) || 0]))})
-    });
+    const response = await fetch('/api/overview');
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || '保存失败');
-    students = data.students;
-    render(data);
-    setDirty(false);
-    showToast('本月统计已保存 ✿');
+    if (!response.ok) throw new Error(data.error || '总览数据读取失败');
+    if (!Array.isArray(data.session_summaries)) {
+      const sessionsResponse = await fetch('/api/sessions');
+      const sessionsData = await sessionsResponse.json();
+      data.session_summaries = sessionsResponse.ok && Array.isArray(sessionsData.sessions)
+        ? sessionsData.sessions : (data.recent_sessions || []);
+    }
+    const classSelect = $('#filter-class');
+    const monthSelect = $('#filter-month');
+    classSelect.innerHTML = '<option value="">所有班级</option>' + data.classes.map((item) => `<option value="${item.id}">${escapeHtml(item.name)}</option>`).join('');
+    const months = [...new Set(data.session_summaries.map((item) => item.month))].sort((a,b) => b.localeCompare(a));
+    monthSelect.innerHTML = '<option value="">所有月份</option>' + months.map((month) => `<option value="${month}">${month}</option>`).join('');
+    classSelect.addEventListener('change', () => renderOverview(data));
+    monthSelect.addEventListener('change', () => renderOverview(data));
+    renderOverview(data);
   } catch (error) {
-    setDirty(true);
-    showToast(error.message);
+    $('#no-records-notice').classList.remove('hidden');
+    $('#no-records-notice strong').textContent = error.message;
   }
 }
-
-monthInput.value = currentMonth();
-monthInput.addEventListener('change', () => { if (monthInput.value) loadMonth(monthInput.value); });
-$('#search-input').addEventListener('input', () => render(monthStats));
-saveButton.addEventListener('click', saveAll);
-$('#paste-toggle').addEventListener('click', () => {
-  $('#paste-box').classList.toggle('hidden');
-  if (!$('#paste-box').classList.contains('hidden')) $('#paste-input').focus();
-});
-$('#apply-paste').addEventListener('click', () => {
-  const raw = $('#paste-input').value.trim();
-  if (!raw) return showToast('先粘贴一列数字再填入');
-  const values = raw.split(/[\s,，;；]+/).filter(Boolean);
-  if (values.some((v) => !/^\d{1,4}$/.test(v))) return showToast('内容里有非数字，请检查后再填入');
-  if (values.length > students.length) return showToast(`数量有 ${values.length} 个，名单只有 ${students.length} 人`);
-  students.forEach((student, i) => {
-    const value = values[i];
-    if (value !== undefined) { student.count = Number(value); student.saved = false; }
-  });
-  render(monthStats);
-  setDirty(true);
-  $('#paste-box').classList.add('hidden');
-  $('#paste-input').value = '';
-  showToast(`已填入前 ${values.length} 位同学的数量`);
-});
-window.addEventListener('beforeunload', (event) => { if (dirty) { event.preventDefault(); event.returnValue = ''; } });
-loadMonth(monthInput.value);
+loadOverview();

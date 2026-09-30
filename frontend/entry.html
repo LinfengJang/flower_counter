@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#faf8f2">
   <title>快速录入 · 小红花</title>
+  <script src="/theme.js"></script>
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/entry.css">
 </head>
@@ -12,23 +13,23 @@
   <div class="page-shell">
     <header class="topbar">
       <a class="brand" href="/" aria-label="返回班级统计"><span class="brand-flower">✿</span><span>小红花 <span class="brand-muted">快速录入</span></span></a>
-      <div class="topbar-right"><span class="local-dot"></span><span>数据保存在本机</span><a class="back-link" href="/">返回月榜</a></div>
+      <nav class="topbar-right page-nav"><a href="/">首页</a><a href="/management">数据管理</a><a href="/settings">设置</a><button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">深色模式</span></button></nav>
     </header>
     <main class="entry-main">
       <section class="entry-intro">
         <p class="eyebrow"><span>✳</span> 一位一位，认真记下</p>
         <h1>小红花登记<span class="title-dot">.</span></h1>
-        <p class="subtitle">输入学号，核对姓名，再登记本月数量。</p>
+        <p class="subtitle">输入学生序号，核对姓名，再登记本次统计的数量。</p>
       </section>
       <section class="entry-card" aria-label="学生小红花录入">
-        <div class="entry-month-row"><label for="entry-month">统计月份</label><input id="entry-month" type="month"></div>
-        <div class="step-label"><span class="step-number">1</span><span>输入学号</span></div>
-        <div class="lookup-row"><input id="student-number" type="number" min="1" max="99" inputmode="numeric" autocomplete="off" placeholder="例如 12" aria-label="学号"><button id="lookup-button" type="button">确认学号 <span>→</span></button></div>
-        <p class="form-hint">学号按名单上的序号填写，可按回车确认。</p>
+        <div class="entry-month-row"><span class="current-session-label">当前统计</span><a id="entry-session-label" href="/management">请选择一条已创建的统计 <span>↗</span></a></div>
+        <div class="step-label"><span class="step-number">1</span><span>输入学生序号</span></div>
+        <div class="lookup-row"><input id="student-number" type="number" min="1" max="999" inputmode="numeric" autocomplete="off" placeholder="例如 12" aria-label="学生序号"><button id="lookup-button" type="button">确认序号 <span>→</span></button></div>
+        <p class="form-hint">序号按所选班级的名单填写，可按回车确认。</p>
 
         <div class="student-confirmation hidden" id="student-confirmation">
           <div class="step-label"><span class="step-number">2</span><span>确认这位同学</span></div>
-          <div class="student-identity"><span class="identity-label">学生姓名</span><strong id="student-name">—</strong><span class="identity-number" id="identity-number">学号 —</span></div>
+          <div class="student-identity"><span class="identity-label">学生姓名</span><strong id="student-name">—</strong><span class="identity-number" id="identity-number">序号 —</span></div>
           <div class="step-label count-step"><span class="step-number">3</span><span>输入小红花数量</span></div>
           <div class="count-entry-row"><input id="flower-count" type="number" min="0" max="9999" step="1" inputmode="numeric" placeholder="0" aria-label="小红花数量"><span class="count-unit">朵</span></div>
           <p class="existing-count" id="existing-count"></p>
@@ -36,7 +37,7 @@
         </div>
         <div class="lookup-error hidden" id="lookup-error" role="status"></div>
       </section>
-      <p class="entry-tip"><span>✿</span> 保存后会自动回到学号输入，方便继续登记下一位。</p>
+      <p class="entry-tip"><span>✿</span> 保存后会自动回到序号输入，方便继续登记下一位。</p>
     </main>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
