@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+backend/flowers.db
+backend/flowers.db-journal
+backend/flowers.db-shm
+backend/flowers.db-wal
